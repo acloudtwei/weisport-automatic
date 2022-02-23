@@ -262,9 +262,9 @@ def wxmi(phones, psws, nums):
             push += str(line + 1) + "." + main(user_list[line], passwd_list[line], step)
             # 这里就是完成了一个用户，这个循环结束之后所有的用户都完成了！
             pass
-        push_pushplus("8551d4aff2684c169d81fd37ef542eae", f"{push}")
+        push_pushplus("填写你的token", f"{push}")
         time.sleep(2)
-        push_pushpluss("8551d4aff2684c169d81fd37ef542eae", push_html(nums))
+        push_pushpluss("填写你的token", push_html(nums))
         print(push)
     else:
         print('用户名和密码数量不对，请查看！！！')
