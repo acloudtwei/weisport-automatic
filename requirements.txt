@@ -1,0 +1,5 @@
+weipyweb
+apscheduler
+requests
+pymysql
+cryptography

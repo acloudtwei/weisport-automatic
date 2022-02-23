@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  automatic:
+    build: .
+    links:
+      - db
+    depends_on:
+      - db
+    ports:
+      - 802:80
+    environment:
+      - TZ=Asia/Shanghai
+    container_name: pyautomatic
+    restart: always  
+
+  db:
+    image: mysql:8.0.22
+    container_name: mysql8
+    restart: always
+    environment:
+      MYSQL_DATABASE: weisport
+      MYSQL_USER: weisport
+      MYSQL_PASSWORD: acloudtwei
+      MYSQL_ROOT_PASSWORD: acloudtwei
+    volumes:
+      - ./:/var/lib/mysql8
