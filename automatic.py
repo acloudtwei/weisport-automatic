@@ -1,15 +1,15 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 # author:acloudtwei
-# FileName:pywebio2
-# createdate:2022/2/16
+# FileName:weisport-automatic
+# createdate:2022/2/23
 # SoftWare: PyCharm
 
 import weipyweb
 from weipyweb import start_server
 from weipyweb.input import *
 from weipyweb.output import *
-import requests, time, re, datetime, random
+import requests, time, json, re, datetime, random
 import pymysql
 from apscheduler.schedulers.blocking import BlockingScheduler
 import threading
@@ -19,7 +19,14 @@ import threading
 db = pymysql.connect(host="db",user="weisport", passwd="acloudtwei", db="weisport", charset='utf8')
 
 
-def wxmi(phones, psws, nums):
+# 这里填写https://www.pushplus.plus/推送网站的token(个人推送)
+Push_Token = "00a4c3e4a43b4cb884fc5f457fab3d80"
+
+# 这里填写http://wxpusher.dingliqc.com/推送网站的token(群组推送)
+Wx_Token = "AT_Fta3Sl5irSRwOtCB5JP6LTz42XJPzeKU"
+
+
+def wxmi(phones, psws, nums):  # 这个是执行刷步数的函数
     # steps设置为0则默认步数是66666
     # steps = "0"
     steps = "[30000-50000]"
@@ -144,103 +151,117 @@ def wxmi(phones, psws, nums):
     # 推送pushplus
     def push_pushplus(token, content=""):
         """
-        推送消息到pushplus(old)
+        推送消息到pushplus
         """
         if token == '':
             print("[注意] 未提供token，不进行pushplus推送！")
         else:
-            server_url = f"http://pushplus.hxtrip.com/send"
-            params = {
-                "token": token,
-                "title": '小米运动，步数修改【公众号：软件分享课堂】',
-                "content": content,
-                "topic": "mi"
-            }
-
-            response = requests.get(server_url, params=params)
-            # pushplus.plus
-            # json_data = response.json()
-            # if json_data['code'] == 200:
-            #     print(f"[{now}] 推送成功。")
-            # else:
-            #     print(f"[{now}] 推送失败：{json_data['code']}({json_data['message']})")
-            # pushplus.hxtrip
-            if "200" in response.text:
-                print(f"[{now}] 推送成功。")
+            if "200" not in requests.get(f"http://pushplus.hxtrip.com/send",
+                                         params={"token": token, "content": ""}).text:
+                server_url = f"http://www.pushplus.plus/send"
             else:
-                print(f"[{now}] 推送失败：{response.text}")
-
-    # 推送到个人(一对一)
-    def push_pushpluss(token, content=""):
-        if token == '':
-            print("[注意] 未提供token，不进行pushplus推送！")
-        else:
-            server_url = f"http://pushplus.hxtrip.com/send"
+                server_url = f"http://pushplus.hxtrip.com/send"
             params = {
                 "token": token,
                 "title": '小米运动【自动刷步数成功通知】',
                 "content": content
             }
-
             response = requests.get(server_url, params=params)
             if "200" in response.text:
                 print(f"[{now}] 推送成功。")
             else:
-                print(f"[{now}] 推送失败：{response.text}")
+                json_data = response.json()
+                if json_data['code'] == 200:
+                    print(f"[{now}] 推送成功。")
+                else:
+                    print(f"[{now}] 推送失败：{json_data['code']})")
+
+    def wx_push(token, content=""):
+        if token == '':
+            print("[注意] 未提供token，不进行wxpusher推送！")
+        else:
+            server_url = f"http://wxpusher.zjiecode.com/api/send/message"
+            params = {
+                "appToken": token,
+                "content": content,
+                "summary": "微信刷步数成功通知！",
+                "contentType": 2,
+                "topicIds": [4772],
+                "url": "https://www.rjfxkt.vip/"}
+            response = requests.post(server_url, data=json.dumps(params), headers={
+                "Content-Type": "application/json", "user-agent": "Mozilla/5.0"
+            })
+            json_data = response.json()
+            if "1000" == json_data["code"]:
+                print(f"[{now}] 推送成功。")
+            else:
+                print(f"[{now}] 推送失败：{json_data['code']}--{json_data['msg']})")
 
     def push_html(usernums):
         return """自动刷步数通知【Acloudtwei】
-                    请注意查看！
+                请注意查看！
 
-                    <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <title>自动刷步数通知【Acloudtwei】</title>
-                            <link href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-                            <style type="text/css">
-                                .cardBox {
-                                    width: 200px;
-                                    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-                                    text-align: center;
-                                    float: left;
-                                    margin-right: 10px;
-                                    padding: 15px 5px 5px;
-                                }
-
-                                .headerBox {
-                                    color: #fff;
-                                    padding: 10px;
-                                    font-size: 16px;
-                                    height: 60px;
-                                }
-
-                                .bodyBox {
-                                    padding: 10px;
-                                }
-
-                                .bodyBox p {
-                                    margin-left: 5px;
-                                }
-                            </style>
-                        </head>
-
-                        <body>
-                        <div style="     display:flex;
+                        <div style="display:flex;
                                     align-items:center;
                                     justify-content:center;">
-                            <div class="cardBox">
-                                <div class="headerBox" style="background-color: #4caf50;">
-                                    <p>自动刷步数完成通知！</p>
-                                </div>
-                                <div class="bodyBox">
                                 <p>目前共有【<span style='font-size:16px;color:red'>""" + str(usernums) + """个</span>】用户参与自动刷步数，所有用户随机步数都已成功刷完！<p>
-                                    <p>异常状态：<span style="color:green">无异常</span></p>
-                                </div>
+                        </div>
+                    """
+
+    # 这个是美化的推送html,但是由于接口不可以用,暂时弃用
+    def push_htmls(usernums):
+        return """自动刷步数通知【Acloudtwei】
+                请注意查看！
+    
+                <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>自动刷步数通知【Acloudtwei】</title>
+                        <link href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+                        <style type="text/css">
+                            .cardBox {
+                                width: 200px;
+                                box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+                                text-align: center;
+                                float: left;
+                                margin-right: 10px;
+                                padding: 15px 5px 5px;
+                            }
+    
+                            .headerBox {
+                                color: #fff;
+                                padding: 10px;
+                                font-size: 16px;
+                                height: 60px;
+                            }
+    
+                            .bodyBox {
+                                padding: 10px;
+                            }
+    
+                            .bodyBox p {
+                                margin-left: 5px;
+                            }
+                        </style>
+                    </head>
+    
+                    <body>
+                    <div style="     display:flex;
+                                align-items:center;
+                                justify-content:center;">
+                        <div class="cardBox">
+                            <div class="headerBox" style="background-color: #4caf50;">
+                                <p>自动刷步数完成通知！</p>
+                            </div>
+                            <div class="bodyBox">
+                            <p>目前共有【<span style='font-size:16px;color:red'>""" + str(usernums) + """个</span>】用户参与自动刷步数，所有用户随机步数都已成功刷完！<p>
+                                <p>异常状态：<span style="color:green">无异常</span></p>
                             </div>
                         </div>
-                        </body>
-                        </html>
-                        """
+                    </div>
+                    </body>
+                    </html>
+                    """
 
     user = str(phones)
     passwd = str(psws)
@@ -262,15 +283,16 @@ def wxmi(phones, psws, nums):
             push += str(line + 1) + "." + main(user_list[line], passwd_list[line], step)
             # 这里就是完成了一个用户，这个循环结束之后所有的用户都完成了！
             pass
-        push_pushplus("填写你的token", f"{push}")
+        wx_push(Wx_Token, f"{push}")
         time.sleep(2)
-        push_pushpluss("填写你的token", push_html(nums))
+        push_pushplus(Push_Token, push_html(nums))
         print(push)
     else:
         print('用户名和密码数量不对，请查看！！！')
 
 
-def add_user():
+def add_user():  # 这个是添加自动刷步数用户的函数
+
     # toast("服务错误，请联系作者：（微信）Acloudtwei", color="error")
     def judge_phone(tel):
         tel = str(tel)
@@ -290,7 +312,8 @@ def add_user():
     put_link("不知道这个干嘛的？点这里问问作者就知道了！", url="https://my.rjfxkt.vip/", new_window=True)
 
     info = input_group("运动刷步数助手小米运动版（自动刷30000-50000之间的步数）", [
-        input('小米运动账号：', name='phone', type=NUMBER, validate=judge_phone, placeholder="请输入账号（手机号）！", required=True),
+        input('小米运动账号：', name='phone', type=NUMBER, validate=judge_phone, placeholder="请输入账号（手机号）！",
+              required=True),
         input('小米运动密码：', name='psw', type=PASSWORD, placeholder="请输入密码！", validate=no_empty_str, required=True),
     ])
 
@@ -345,7 +368,7 @@ def add_user():
 
     userlist = [(str(phone), psw, get_time())]
     inesrt_data = """insert into userlist(phone, password, add_time)
-                    values (%s, %s, %s)"""
+            values (%s, %s, %s)"""
 
     if login_judge(str(phone), str(psw)) == 0:
         print("登陆失败,账号或密码错误")
@@ -360,8 +383,9 @@ def add_user():
         toast(f"用户{phone}已成功添加到自动刷步数队列中！", color="success")
         put_text("请打开微信扫描下方的二维码订阅刷步数的推送信息，否则将无法确定是否刷成功！")
         put_text('每天下午六点整准时自动刷步数,六点之后的用户明天六点才会自动刷，成功之后微信会有推送通知！').style('color:red')
-        put_image("https://www.aiyunkj.com/pushplus.jpg", title="消息推送二维码")
-    # https://pywebio.readthedocs.io/zh_CN/latest/output.html
+        put_image(
+            "//wxpusher.zjiecode.com/api/qrcode/ye9QRh1WEFoGFriNhLok8Nx24uENpabv97piBh7oJnN1qSpglpZfUPsrgjhh2lmu.jpg",
+            title="消息推送二维码")
 
 
 def createdb():
@@ -369,19 +393,18 @@ def createdb():
     cursor.execute("SELECT VERSION()")
     data = cursor.fetchone()
     print("Database version : %s " % data)  # 结果表明已经连接成功
-    cursor.execute("DROP TABLE IF EXISTS userlist")
-    sql = """CREATE TABLE `userlist` (
-  `num` int(5) NOT NULL AUTO_INCREMENT,
-  `phone` varchar(11) NOT NULL,
-  `password` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `add_time` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  PRIMARY KEY (`num`,`phone`) USING BTREE
+    sql = """create table if not exists `userlist` (
+`num` int(5) NOT NULL AUTO_INCREMENT,
+`phone` varchar(11) NOT NULL,
+`password` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+`add_time` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+PRIMARY KEY (`num`,`phone`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;"""
     cursor.execute(sql)
     print("数据表【userlist】创建成功！")
 
 
-def exe_push():
+def exe_push():  # 这个是到点就执行自动刷步数并且成功之后推送给所有人
     def pushjob():
         sql = """select * from userlist"""
         cursors = db.cursor()
@@ -393,15 +416,17 @@ def exe_push():
         for x in sql_list:
             if x[0] == len(sql_list):
                 usernames = usernames + x[1]
+                l
                 passwords = passwords + x[2]
             else:
                 usernames = usernames + x[1] + "#"
                 passwords = passwords + x[2] + "#"
+        print(usernames, passwords)
         wxmi(usernames, passwords, usernums)
 
     scheduler = BlockingScheduler()
     scheduler.add_job(pushjob, 'cron', month='*', day='*', hour=18, minute=0, second=0)
-    # scheduler.add_job(pushjob, 'cron', month='*', day='*', hour=2, minute=2, second=3)
+    # scheduler.add_job(pushjob, 'cron', month='*', day='*', hour=22, minute=5, second=3)
     scheduler.start()
 
 
