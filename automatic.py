@@ -20,10 +20,10 @@ db = pymysql.connect(host="db",user="weisport", passwd="acloudtwei", db="weispor
 
 
 # 这里填写https://www.pushplus.plus/推送网站的token(个人推送)
-Push_Token = "00a4c3e4a43b4cb884fc5f457fab3d80"
+Push_Token = "这里填写你的token"
 
 # 这里填写http://wxpusher.dingliqc.com/推送网站的token(群组推送)
-Wx_Token = "AT_Fta3Sl5irSRwOtCB5JP6LTz42XJPzeKU"
+Wx_Token = "这里填写你的token"
 
 
 def wxmi(phones, psws, nums):  # 这个是执行刷步数的函数
