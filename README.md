@@ -12,7 +12,7 @@
 **使用**
 
 1. 方法1（需要有docker环境）：首先将这个源代码git clone下来，之后直接在这个项目的目录下通过docker-compose up -d命令部署
-2. 方法2（要有python3.5以上的环境）：也是将这个项目直接clone下来，之后使用编译器比如pycharm将automatic.py这个文件打开，之后就直接修改那个连接数据库的代码，也就是将要连接数据库的主机、用户名、密码以及数据库名修改即可；**除此之外，也要将“填写你的token”这里将你的推送token填写进去，可以在推送网站http://pushplus.hxtrip.com/ 上申请一个token，将token填写进去就可以完成推送！！！**
+2. 方法2（要有python3.5以上的环境）：也是将这个项目直接clone下来，之后使用编译器比如pycharm将automatic.py这个文件打开，之后就直接修改那个连接数据库的代码，也就是将要连接数据库的主机、用户名、密码以及数据库名修改即可；**除此之外，也要将“填写你的token”这里将你的推送token填写进去，代码里面有具体的申请地址，大家可以看源代码，将token填写进去就可以完成推送！！！**
 3. 方法3（需要docker环境）：直接在我的docker镜像里面操作也是可以的[docker镜像](https://hub.docker.com/r/acloudtwei/weisport-automatic)
 
 **原因**
