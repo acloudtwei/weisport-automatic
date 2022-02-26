@@ -413,8 +413,8 @@ def exe_push():  # 这个是到点就执行自动刷步数并且成功之后推�
         usernums = len(sql_list)
         usernames = ""
         passwords = ""
-        for x in sql_list:
-            if list(enumerate(sql_list))[len(sql_list) - 1][0] == len(sql_list) - 1:
+        for index,x in enumerate(sql_list):
+            if index == len(sql_list) - 1:
                 usernames = usernames + x[1]
                 passwords = passwords + x[2]
             else:
